@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'com.xq'
-version = '1.0.0'
+version = '2.0.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -26,7 +26,11 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact("src/main/groovy/xq-dev.gradle") {
-                classifier = 'plugin'
+                classifier = 'dev-plugin'
+                extension = 'gradle'
+            }
+            artifact("src/main/groovy/xq-test.gradle") {
+                classifier = 'test-plugin'
                 extension = 'gradle'
             }
         }
