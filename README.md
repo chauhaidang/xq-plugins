@@ -1,23 +1,21 @@
 # XQ Plugins 
 ![Latest build result](https://github.com/chauhaidang/xq-plugins/actions/workflows/ci.yml/badge.svg?branch=main)
 
-A Gradle-based project for building and managing plugins with centralized dependency management using the Gradle platform feature.
+A Gradle-based project for building and managing plugins.
 
 ## Plugins & platform version
-| Name     | Version | Last change                          |
-|----------|---------|--------------------------------------|
-| xq-dev   | 2.0.0   | Change default jar file name         |
-| xq-test  | 1.0.1   | Plugin reuse platform() dependencies |
-| platform | 1.0.0   | Initial release                      |
+| Name            | Version | Last change                          |
+|-----------------|---------|--------------------------------------|
+| plugin          | 2.0.0   | -                                    |
+| plugin->xq-dev  | 2.0.0   | Change default jar file name         |
+| pluign->xq-test | 1.0.1   | Plugin reuse platform() dependencies |
 
 ## Project Structure
 
-- **`platform`**: Defines centralized dependency constraints using the Gradle Java Platform Plugin.
 - **`plugin`**: Contains the plugin implementation and configurations.
 
 ## Features
 
-- Centralized dependency management with Gradle platform.
 - Plugin development with support for Java, Groovy, and Spring Boot.
 - Predefined test configurations (unit, integration, and component tests).
 - Customizable build and test tasks.
