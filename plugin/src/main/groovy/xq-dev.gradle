@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.xq'
-version = '1.0.0'
+version = '2.0.0'
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -57,5 +57,5 @@ tasks.named("jacocoTestReport") {
 
 //Predefined jar name
 bootJar {
-    archiveFileName = "app2.jar"
+    archiveFileName = "app.jar"
 }
