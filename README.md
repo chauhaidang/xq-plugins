@@ -3,6 +3,13 @@
 
 A Gradle-based project for building and managing plugins with centralized dependency management using the Gradle platform feature.
 
+## Plugins & platform version
+| Name     | Version | Last change                          |
+|----------|---------|--------------------------------------|
+| xq-dev   | 2.0.0   | Change default jar file name         |
+| xq-test  | 1.0.1   | Plugin reuse platform() dependencies |
+| platform | 1.0.0   | Initial release                      |
+
 ## Project Structure
 
 - **`platform`**: Defines centralized dependency constraints using the Gradle Java Platform Plugin.
