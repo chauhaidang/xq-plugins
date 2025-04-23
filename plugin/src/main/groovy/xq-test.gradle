@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.xq'
-version = '1.0.0'
+version = '1.0.1'
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -23,16 +23,16 @@ repositories {
 
 //Dependencies configuration
 dependencies {
-    runtimeOnly(platform("com.xq:platform"))
-    annotationProcessor(platform("com.xq:platform"))
-    compileOnly(platform("com.xq:platform"))
+    runtimeOnly(platform('com.xq:platform:1.0.0'))
+    annotationProcessor(platform('com.xq:platform:1.0.0'))
+    compileOnly(platform('com.xq:platform:1.0.0'))
     compileOnly("org.slf4j:slf4j-api")
     compileOnly("org.projectlombok:lombok")
 
     annotationProcessor("org.projectlombok:lombok")
-    implementation(platform("com.xq:platform"))
+    implementation(platform('com.xq:platform:1.0.0'))
     implementation('io.karatelabs:karate-core:1.5.1')
-    testImplementation(platform("com.xq:platform"))
+    testImplementation(platform('com.xq:platform:1.0.0'))
     testImplementation 'io.karatelabs:karate-core:1.5.1'
 }
 
