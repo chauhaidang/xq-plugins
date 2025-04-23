@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'groovy'
+}
+
+group = 'com.xq'
+version = '1.0.0'
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+//Repository configuration
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://repo.spring.io/release' }
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
+}
+
+//Dependencies configuration
+dependencies {
+    runtimeOnly(platform("com.xq:platform"))
+    annotationProcessor(platform("com.xq:platform"))
+    compileOnly(platform("com.xq:platform"))
+    compileOnly("org.slf4j:slf4j-api")
+    compileOnly("org.projectlombok:lombok")
+
+    annotationProcessor("org.projectlombok:lombok")
+    implementation(platform("com.xq:platform"))
+    implementation('io.karatelabs:karate-core:1.5.1')
+    testImplementation(platform("com.xq:platform"))
+    testImplementation 'io.karatelabs:karate-core:1.5.1'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+project.extensions.create("unitTest", TestConfiguration)
+project.extensions.create("intTest", TestConfiguration)
+project.extensions.create("compTest", TestConfiguration)
+
+//Test configuration
+tasks.named("test") {
+    useJUnitPlatform()
+    maxParallelForks = 4
+    maxHeapSize = "1g"
+    finalizedBy("jacocoTestReport")
+}
+
+tasks.named("jacocoTestReport") {
+    dependsOn(tasks.named("test"))
+}
