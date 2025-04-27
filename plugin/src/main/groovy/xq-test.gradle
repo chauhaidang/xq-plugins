@@ -5,7 +5,6 @@ plugins {
 }
 
 group = 'com.xq'
-version = '1.0.1'
 
 ext {
     springboot_version = '3.3.0'

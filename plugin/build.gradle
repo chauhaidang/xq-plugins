@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'com.xq'
-version = '2.0.1'
+version = '2.0.3'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -28,13 +28,14 @@ publishing {
             groupId = project.group
             artifactId = project.name
             version = project.version
-            artifact("src/main/groovy/xq-dev.gradle") {
-                classifier = 'dev-plugin'
-                extension = 'gradle'
-            }
-            artifact("src/main/groovy/xq-test.gradle") {
-                classifier = 'test-plugin'
-                extension = 'gradle'
+
+            fileTree('src/main/groovy').matching {
+                include '*.gradle'
+            }.each { File file ->
+                artifact(file) {
+                    classifier = "${file.name.replace('.gradle', '')}"
+                    extension = 'gradle'
+                }
             }
         }
     }
@@ -49,6 +50,7 @@ publishing {
         }
     }
 }
+
 
 dependencies {
     testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
