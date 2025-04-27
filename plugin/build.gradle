@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'com.xq'
-version = '2.0.0'
+version = '2.0.1'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -24,7 +24,10 @@ repositories {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        gpr(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
             artifact("src/main/groovy/xq-dev.gradle") {
                 classifier = 'dev-plugin'
                 extension = 'gradle'
@@ -36,7 +39,14 @@ publishing {
         }
     }
     repositories {
-        mavenLocal() // Publishes to the local Maven repository (~/.m2/repository)
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/chauhaidang/xq-plugins")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
