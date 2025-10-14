@@ -28,6 +28,37 @@ repositories {
     }
 }
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+// Custom sourceSets for System Integration Tests
+sourceSets {
+    sitMain {
+        java {
+            srcDirs = ['sit/main/java']
+        }
+        resources {
+            srcDirs = ['sit/main/resources']
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+
+    sitTest {
+        java {
+            srcDirs = ['sit/test/java']
+        }
+        resources {
+            srcDirs = ['sit/test/resources']
+        }
+        compileClasspath += sourceSets.sitMain.output + sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.sitMain.output + sourceSets.main.output + sourceSets.test.output
+    }
+}
+
 //Dependencies configuration
 dependencies {
     compileOnly("org.slf4j:slf4j-api:$slf4j_version")
@@ -36,17 +67,19 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:$lombok_version")
     implementation('io.karatelabs:karate-core:1.5.1')
     testImplementation 'io.karatelabs:karate-core:1.5.1'
-}
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+    // SIT dependencies
+    sitTestImplementation "org.testng:testng:${testng_version}"
+    sitTestImplementation 'org.yaml:snakeyaml:2.0'
+    sitTestImplementation sourceSets.main.output
+    sitTestImplementation sourceSets.sitMain.output
 }
 
 project.extensions.create("unitTest", TestConfiguration)
 project.extensions.create("intTest", TestConfiguration)
 project.extensions.create("compTest", TestConfiguration)
+// SIT test configuration extension
+project.extensions.create("sitTestConfig", TestConfiguration)
 
 //Test configuration
 tasks.named("test") {
@@ -56,6 +89,87 @@ tasks.named("test") {
     finalizedBy("jacocoTestReport")
 }
 
+// System Integration Test task with TestNG
+tasks.register('sitTest', Test) {
+    description = 'Runs System Integration Tests using TestNG'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.sitTest.output.classesDirs
+    classpath = sourceSets.sitTest.runtimeClasspath
+
+    useTestNG() {
+        def config = project.extensions.getByName('sitTestConfig') as TestConfiguration
+
+        // Suite file support (XML or YAML)
+        if (config.suiteXmlFile) {
+            suites(project.file(config.suiteXmlFile))
+        }
+        if (config.suiteYamlFile) {
+            suites(project.file(config.suiteYamlFile))
+        }
+
+        // Groups configuration
+        if (!config.includeGroups.isEmpty()) {
+            includeGroups(config.includeGroups as String[])
+        }
+        if (!config.excludeGroups.isEmpty()) {
+            excludeGroups(config.excludeGroups as String[])
+        }
+
+        // Parallel execution
+        parallel = config.parallel
+        threadCount = config.threadCount
+
+        // Additional TestNG options
+        preserveOrder = config.preserveOrder
+        groupByInstances = config.groupByInstances
+        useDefaultListeners = config.useDefaultListeners
+
+        if (!config.listeners.isEmpty()) {
+            listeners = config.listeners
+        }
+    }
+
+    // Set verbose mode via system properties if requested
+    if (project.extensions.getByName('sitTestConfig').verbose) {
+        systemProperty 'testng.verbose', '1'
+    }
+
+    // Test reporting
+    reports {
+        html.required = true
+        junitXml.required = true
+    }
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat = 'full'
+        showStandardStreams = false
+    }
+
+    // Should run after standard tests but not part of check
+    shouldRunAfter tasks.named('test')
+}
+
+// Configure custom output directory after project evaluation
+project.afterEvaluate {
+    def sitTestTask = tasks.named('sitTest', Test).get()
+    def config = project.extensions.getByName('sitTestConfig') as TestConfiguration
+    if (config.outputDirectory) {
+        sitTestTask.reports.html.outputLocation = project.file(config.outputDirectory)
+    }
+}
+
 tasks.named("jacocoTestReport") {
     dependsOn(tasks.named("test"))
+
+    // Only include main sourceSet, exclude sit
+    sourceSets project.sourceSets.main
+
+    // Explicitly exclude sit from coverage
+    classDirectories.setFrom(
+        files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: '**/sit/**')
+        })
+    )
 }

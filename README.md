@@ -4,11 +4,11 @@
 A Gradle-based project for building and managing plugins.
 
 ## Plugins & platform version
-| Name            | Version | Last change                          |
-|-----------------|---------|--------------------------------------|
-| plugin          | 2.0.0   | -                                    |
-| plugin->xq-dev  | 2.0.0   | Change default jar file name         |
-| pluign->xq-test | 1.0.1   | Plugin reuse platform() dependencies |
+| Name            | Version | Last change                                          |
+|-----------------|---------|------------------------------------------------------|
+| plugin          | 2.1.0   | Add custom 'sit' sourceSet with TestNG support      |
+| plugin->xq-dev  | 2.0.0   | Change default jar file name                         |
+| plugin->xq-test | 2.1.0   | Add custom 'sit' sourceSet with TestNG support       |
 
 ## Project Structure
 

@@ -7,5 +7,4 @@
 
 rootProject.name = 'xq-plugins'
 include('plugin')
-include('platform')
 
