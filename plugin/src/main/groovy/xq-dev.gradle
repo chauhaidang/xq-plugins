@@ -8,9 +8,7 @@ plugins {
 group = 'com.xq'
 
 ext {
-    springboot_version = '3.3.0'
     lombok_version = '1.18.30'
-    junit_version = '5.11.3'
     slf4j_version = '1.7.36'
     testng_version = '7.9.0'
 }
@@ -34,30 +32,12 @@ dependencies {
     compileOnly("org.slf4j:slf4j-api:$slf4j_version")
     compileOnly("org.projectlombok:lombok:$lombok_version")
     annotationProcessor("org.projectlombok:lombok:$lombok_version")
-    implementation('io.karatelabs:karate-core:1.5.1')
-    testImplementation 'io.karatelabs:karate-core:1.5.1'
 }
 
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
-}
-
-project.extensions.create("unitTest", TestConfiguration)
-project.extensions.create("intTest", TestConfiguration)
-project.extensions.create("compTest", TestConfiguration)
-
-//Test configuration
-tasks.named("test") {
-    useJUnitPlatform()
-    maxParallelForks = 4
-    maxHeapSize = "1g"
-    finalizedBy("jacocoTestReport")
-}
-
-tasks.named("jacocoTestReport") {
-    dependsOn(tasks.named("test"))
 }
 
 //Predefined jar name
