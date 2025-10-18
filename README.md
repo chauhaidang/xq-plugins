@@ -147,6 +147,26 @@ Create `sit/test/resources/testng-suite.xml`:
 - `compileSitTestJava` - Compile SIT test classes
 - `sitTest` - Execute SIT tests using TestNG
 
+## Publishing
+
+### Automatic Publishing to GitHub Packages
+
+The project uses GitHub Actions to automatically publish plugins to GitHub Packages when the version changes in `plugin/build.gradle`.
+
+**How it works**:
+1. Update the version in `plugin/build.gradle` (e.g., from `2.1.0` to `2.1.1`)
+2. Commit and push to the `main` branch
+3. GitHub Actions will:
+   - Detect the version change
+   - Build the project
+   - Publish to GitHub Packages (only if build succeeds)
+   - Create a Git tag (e.g., `v2.1.1`)
+
+**Manual publishing** (for local development):
+```bash
+./gradlew publishToMavenLocal
+```
+
 ## Documentation
 
 For detailed plugin development and usage information, see:
