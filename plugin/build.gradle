@@ -23,22 +23,6 @@ repositories {
 }
 
 publishing {
-    publications {
-        gpr(MavenPublication) {
-            groupId = project.group
-            artifactId = project.name
-            version = project.version
-
-            fileTree('src/main/groovy').matching {
-                include '*.gradle'
-            }.each { File file ->
-                artifact(file) {
-                    classifier = "${file.name.replace('.gradle', '')}"
-                    extension = 'gradle'
-                }
-            }
-        }
-    }
     repositories {
         maven {
             name = "GitHubPackages"
@@ -48,6 +32,7 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+        mavenLocal()
     }
 }
 
