@@ -1,9 +1,21 @@
 plugins {
-    id 'xq-test' version '2.1.0'
+    id 'xq-test' version '2.1.1'
+    id 'xq-dev' version '2.1.1'
+    id 'org.springframework.boot' version "3.3.0"
 }
 
 group = 'com.example'
 version = '1.0.0'
+
+// Disable Spring Boot's bootJar task since this is a test consumer without a main class
+tasks.named('bootJar') {
+    enabled = false
+}
+
+// Use regular jar task instead
+tasks.named('jar') {
+    enabled = true
+}
 
 repositories {
     mavenCentral()
