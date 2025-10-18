@@ -1,0 +1,34 @@
+plugins {
+    id 'xq-test' version '2.1.0'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+// Configure SIT test with TestNG
+sitTestConfig {
+    // Using XML suite file is recommended for proper TestNG lifecycle management
+    suiteXmlFile = 'sit/test/resources/testng-suite.xml'
+    // Alternatively, you can use programmatic group filtering (but @BeforeClass may not execute):
+    //includeGroups = ['smoke', 'integration']
+    //parallel = 'methods'
+    //threadCount = 4
+    verbose = true
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+
+    // SIT Main dependencies
+    sitMainImplementation 'org.slf4j:slf4j-api:1.7.36'
+
+    // Additional SIT test dependencies
+    sitTestImplementation 'io.rest-assured:rest-assured:5.3.0'
+    sitTestImplementation 'org.assertj:assertj-core:3.24.2'
+}
