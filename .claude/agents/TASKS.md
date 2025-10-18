@@ -1,6 +1,40 @@
-# Implementation Tasks: Custom 'sit' SourceSet for xq-test Plugin
+# XQ Plugins - Task History
 
-## 🎉 PROJECT STATUS: COMPLETED ✅
+## Current Status
+
+**Latest Version**: 2.1.0
+**Last Updated**: October 18, 2025
+**Active Branch**: `4-create-custom-gradle-sourceset-called-sit`
+
+---
+
+## Recently Completed: CI Auto-Publish Feature ✅
+
+**Completion Date**: October 18, 2025
+**Affected Files**: `.github/workflows/ci.yml`, `README.md`
+
+### Feature: Automatic Publishing on Version Change
+
+Added GitHub Actions automation to publish plugins to GitHub Packages whenever the version changes in `plugin/build.gradle`.
+
+**Implementation Details**:
+- Added `detect-version-change` job to CI workflow
+- Added conditional `publish` job that runs after successful build
+- Publish only triggers when version changes on `main` branch
+- Automatically creates Git tags for releases (e.g., `v2.1.0`)
+- Updated README.md with Publishing section
+
+**Workflow**:
+1. Developer updates version in `plugin/build.gradle`
+2. Commits and pushes to `main`
+3. CI detects version change
+4. Runs full build
+5. If build succeeds, publishes to GitHub Packages
+6. Creates Git tag for the release
+
+---
+
+## Previous: Custom 'sit' SourceSet for xq-test Plugin ✅
 
 **Implementation Date**: October 14, 2025
 **Plugin Version**: 2.1.0
