@@ -33,29 +33,29 @@ Lightweight testing plugin without Spring Boot dependency.
 - Karate API testing framework
 - Lombok annotation processing
 - Configurable test suites (unit, integration, component)
-- **NEW**: Custom `sit` (System Integration Test) sourceSet with TestNG support
+- **NEW**: Custom `e2e` (End-to-End) sourceSet with TestNG support
 
 **Usage:**
 ```groovy
 plugins {
-    id 'xq-test' version '2.1.0'
+    id 'xq-test' version '2.1.2'
 }
 ```
 
-**SIT (System Integration Test) SourceSet:**
-The plugin automatically creates `sitMain` and `sitTest` sourceSets for system integration testing:
+**E2E (End-to-End) SourceSet:**
+The plugin automatically creates `e2eMain` and `e2eTest` sourceSets for end-to-end testing:
 
 - **Directory structure:**
-  - `sit/main/java` - SIT utility classes
-  - `sit/main/resources` - SIT resources
-  - `sit/test/java` - SIT test classes (uses TestNG)
-  - `sit/test/resources` - SIT test resources (including TestNG suite XML)
+  - `e2e/main/java` - E2E utility classes
+  - `e2e/main/resources` - E2E resources
+  - `e2e/test/java` - E2E test classes (uses TestNG)
+  - `e2e/test/resources` - E2E test resources (including TestNG suite XML)
 
 - **Configuration:**
 ```groovy
-sitTestConfig {
+e2eTestConfig {
     // Option 1: Use TestNG suite XML file (recommended)
-    suiteXmlFile = 'sit/test/resources/testng-suite.xml'
+    suiteXmlFile = 'e2e/test/resources/testng-suite.xml'
 
     // Option 2: Programmatic configuration
     includeGroups = ['smoke', 'integration']
@@ -73,27 +73,27 @@ sitTestConfig {
 ```
 
 - **Tasks:**
-  - `compileSitMainJava` - Compiles SIT utility classes
-  - `compileSitTestJava` - Compiles SIT test classes
-  - `sitTest` - Runs SIT tests using TestNG (not part of `check` task)
+  - `compileE2eMainJava` - Compiles E2E utility classes
+  - `compileE2eTestJava` - Compiles E2E test classes
+  - `e2eTest` - Runs E2E tests using TestNG (not part of `check` task)
 
 - **Dependencies:**
 ```groovy
 dependencies {
-    // SIT main dependencies
-    sitMainImplementation 'org.slf4j:slf4j-api:1.7.36'
+    // E2E main dependencies
+    e2eMainImplementation 'org.slf4j:slf4j-api:1.7.36'
 
-    // SIT test dependencies (TestNG and SnakeYAML are included by default)
-    sitTestImplementation 'io.rest-assured:rest-assured:5.3.0'
-    sitTestImplementation 'org.assertj:assertj-core:3.24.2'
+    // E2E test dependencies (TestNG and SnakeYAML are included by default)
+    e2eTestImplementation 'io.rest-assured:rest-assured:5.3.0'
+    e2eTestImplementation 'org.assertj:assertj-core:3.24.2'
 }
 ```
 
-**Example TestNG Suite XML** (`sit/test/resources/testng-suite.xml`):
+**Example TestNG Suite XML** (`e2e/test/resources/testng-suite.xml`):
 ```xml
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
-<suite name="System Integration Test Suite" verbose="1" parallel="methods" thread-count="4">
-    <test name="SIT Tests">
+<suite name="End-to-End Test Suite" verbose="1" parallel="methods" thread-count="4">
+    <test name="E2E Tests">
         <groups>
             <run>
                 <include name="smoke"/>
@@ -101,16 +101,16 @@ dependencies {
             </run>
         </groups>
         <classes>
-            <class name="com.example.sit.ApiIntegrationTest"/>
+            <class name="com.example.e2e.ApiIntegrationTest"/>
         </classes>
     </test>
 </suite>
 ```
 
 **Notes:**
-- SIT tests are excluded from JaCoCo coverage reports
-- sitTest task is NOT automatically added to the `check` task
-- Run SIT tests explicitly with `./gradlew sitTest`
+- E2E tests are excluded from JaCoCo coverage reports
+- e2eTest task is NOT automatically added to the `check` task
+- Run E2E tests explicitly with `./gradlew e2eTest`
 - TestNG lifecycle methods (@BeforeClass, @AfterClass) work best with XML suite files
 
 ## Test Configuration

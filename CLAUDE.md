@@ -20,6 +20,6 @@ This document serves as the entry point for AI assistants working on the XQ Plug
 
 ## Current Focus
 
-**Active Feature**: Adding custom `sit` (System Integration Test) sourceSet support to xq-test plugin with TestNG configuration.
+**Latest Change (v2.1.2)**: Renamed `sit` (System Integration Test) to `e2e` (End-to-End) sourceSet for better clarity and industry alignment.
 
 See [TASKS.md](.claude/agents/TASKS.md) for detailed implementation breakdown.

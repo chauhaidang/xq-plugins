@@ -36,26 +36,26 @@ configurations {
 
 // Custom sourceSets for System Integration Tests
 sourceSets {
-    sitMain {
+    e2eMain {
         java {
-            srcDirs = ['sit/main/java']
+            srcDirs = ['e2e/main/java']
         }
         resources {
-            srcDirs = ['sit/main/resources']
+            srcDirs = ['e2e/main/resources']
         }
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
 
-    sitTest {
+    e2eTest {
         java {
-            srcDirs = ['sit/test/java']
+            srcDirs = ['e2e/test/java']
         }
         resources {
-            srcDirs = ['sit/test/resources']
+            srcDirs = ['e2e/test/resources']
         }
-        compileClasspath += sourceSets.sitMain.output + sourceSets.main.output + sourceSets.test.output
-        runtimeClasspath += sourceSets.sitMain.output + sourceSets.main.output + sourceSets.test.output
+        compileClasspath += sourceSets.e2eMain.output + sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.e2eMain.output + sourceSets.main.output + sourceSets.test.output
     }
 }
 
@@ -68,18 +68,18 @@ dependencies {
     implementation('io.karatelabs:karate-core:1.5.1')
     testImplementation 'io.karatelabs:karate-core:1.5.1'
 
-    // SIT dependencies
-    sitTestImplementation "org.testng:testng:${testng_version}"
-    sitTestImplementation 'org.yaml:snakeyaml:2.0'
-    sitTestImplementation sourceSets.main.output
-    sitTestImplementation sourceSets.sitMain.output
+    // e2e dependencies
+    e2eTestImplementation "org.testng:testng:${testng_version}"
+    e2eTestImplementation 'org.yaml:snakeyaml:2.0'
+    e2eTestImplementation sourceSets.main.output
+    e2eTestImplementation sourceSets.e2eMain.output
 }
 
 project.extensions.create("unitTest", TestConfiguration)
 project.extensions.create("intTest", TestConfiguration)
 project.extensions.create("compTest", TestConfiguration)
-// SIT test configuration extension
-project.extensions.create("sitTestConfig", TestConfiguration)
+// e2e test configuration extension
+project.extensions.create("e2eTestConfig", TestConfiguration)
 
 //Test configuration
 tasks.named("test") {
@@ -90,15 +90,15 @@ tasks.named("test") {
 }
 
 // System Integration Test task with TestNG
-tasks.register('sitTest', Test) {
+tasks.register('e2eTest', Test) {
     description = 'Runs System Integration Tests using TestNG'
     group = 'verification'
 
-    testClassesDirs = sourceSets.sitTest.output.classesDirs
-    classpath = sourceSets.sitTest.runtimeClasspath
+    testClassesDirs = sourceSets.e2eTest.output.classesDirs
+    classpath = sourceSets.e2eTest.runtimeClasspath
 
     useTestNG() {
-        def config = project.extensions.getByName('sitTestConfig') as TestConfiguration
+        def config = project.extensions.getByName('e2eTestConfig') as TestConfiguration
 
         // Suite file support (XML or YAML)
         if (config.suiteXmlFile) {
@@ -131,7 +131,7 @@ tasks.register('sitTest', Test) {
     }
 
     // Set verbose mode via system properties if requested
-    if (project.extensions.getByName('sitTestConfig').verbose) {
+    if (project.extensions.getByName('e2eTestConfig').verbose) {
         systemProperty 'testng.verbose', '1'
     }
 
@@ -153,23 +153,23 @@ tasks.register('sitTest', Test) {
 
 // Configure custom output directory after project evaluation
 project.afterEvaluate {
-    def sitTestTask = tasks.named('sitTest', Test).get()
-    def config = project.extensions.getByName('sitTestConfig') as TestConfiguration
+    def e2eTestTask = tasks.named('e2eTest', Test).get()
+    def config = project.extensions.getByName('e2eTestConfig') as TestConfiguration
     if (config.outputDirectory) {
-        sitTestTask.reports.html.outputLocation = project.file(config.outputDirectory)
+        e2eTestTask.reports.html.outputLocation = project.file(config.outputDirectory)
     }
 }
 
 tasks.named("jacocoTestReport") {
     dependsOn(tasks.named("test"))
 
-    // Only include main sourceSet, exclude sit
+    // Only include main sourceSet, exclude e2e
     sourceSets project.sourceSets.main
 
-    // Explicitly exclude sit from coverage
+    // Explicitly exclude e2e from coverage
     classDirectories.setFrom(
         files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: '**/sit/**')
+            fileTree(dir: it, exclude: '**/e2e/**')
         })
     )
 }
