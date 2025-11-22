@@ -80,6 +80,8 @@ project.extensions.create("intTest", TestConfiguration)
 project.extensions.create("compTest", TestConfiguration)
 // e2e test configuration extension
 project.extensions.create("e2eTestConfig", TestConfiguration)
+// API client generation configuration extension
+project.extensions.create("apiClientGeneration", ApiClientGenerationExtension)
 
 //Test configuration
 tasks.named("test") {
@@ -172,4 +174,161 @@ tasks.named("jacocoTestReport") {
             fileTree(dir: it, exclude: '**/e2e/**')
         })
     )
+}
+
+/**
+ * Generates API clients from OpenAPI/Swagger definition files.
+ * <p>
+ * This task uses the OpenAPI Generator CLI to generate Java clients based on
+ * the API definition files specified in the apiClientGeneration extension.
+ * </p>
+ *
+ * <p>Prerequisites:</p>
+ * <ul>
+ *   <li>OpenAPI Generator CLI must be installed globally: npm install -g @openapitools/openapi-generator-cli</li>
+ * </ul>
+ *
+ * <p>Configuration:</p>
+ * <pre>
+ * apiClientGeneration {
+ *     apiDefinitionFiles = ['src/main/resources/api/user-api.yaml']
+ *     outputDirectory = 'generated-clients'  // Optional, defaults to 'generated-clients'
+ *     groupId = 'com.mycompany.client'       // Optional, defaults to 'com.xqfitness.client'
+ *     skipPublish = false                     // Optional, defaults to false
+ * }
+ * </pre>
+ *
+ * <p>Usage:</p>
+ * <pre>
+ * ./gradlew generateApiClient
+ * </pre>
+ */
+tasks.register('generateApiClient', Exec) {
+    description = 'Generates API clients from OpenAPI/Swagger definition files using OpenAPI Generator'
+    group = 'code generation'
+
+    // Configure task inputs and outputs for caching
+    doFirst {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+
+        // Validate API definition files are specified
+        if (config.apiDefinitionFiles.get().isEmpty()) {
+            throw new IllegalArgumentException(
+                "No API definition files specified. Please configure apiClientGeneration.apiDefinitionFiles in your build.gradle"
+            )
+        }
+
+        // Validate files exist
+        config.apiDefinitionFiles.get().each { filePath ->
+            def file = project.file(filePath)
+            if (!file.exists()) {
+                throw new FileNotFoundException("API definition file not found: ${file.absolutePath}")
+            }
+        }
+
+        // Extract script resources to a temporary directory
+        def tempDir = new File(project.buildDir, 'api-client-generation')
+        tempDir.mkdirs()
+
+        // Extract generate-api-client.sh
+        def scriptStream = getClass().getResourceAsStream('/scripts/generate-api-client.sh')
+        if (scriptStream == null) {
+            throw new IllegalStateException("Could not find generate-api-client.sh in plugin resources")
+        }
+        def scriptFile = new File(tempDir, 'generate-api-client.sh')
+        scriptFile.withOutputStream { out ->
+            out << scriptStream
+        }
+        scriptStream.close()
+        scriptFile.setExecutable(true)
+
+        // Extract openapitools.json
+        def configStream = getClass().getResourceAsStream('/scripts/openapitools.json')
+        if (configStream == null) {
+            throw new IllegalStateException("Could not find openapitools.json in plugin resources")
+        }
+        def configFile = new File(tempDir, 'openapitools.json')
+        configFile.withOutputStream { out ->
+            out << configStream
+        }
+        configStream.close()
+
+        // Prepare script execution
+        def apiFiles = config.apiDefinitionFiles.get().collect { project.file(it).absolutePath }
+        def outputDir = project.file(config.outputDirectory.get()).absolutePath
+
+        logger.lifecycle("Generating API clients from ${apiFiles.size()} definition file(s):")
+        apiFiles.each { logger.lifecycle("  - ${it}") }
+        logger.lifecycle("Output directory: ${outputDir}")
+
+        // Create output directory if it doesn't exist
+        new File(outputDir).mkdirs()
+
+        // Set command to execute the script
+        commandLine scriptFile.absolutePath
+        args apiFiles
+
+        // Set working directory to project root (critical for script to work correctly)
+        workingDir project.rootDir
+
+        // Set environment variables to override script defaults
+        environment 'GENERATED_CLIENTS_DIR', outputDir
+        environment 'PROJECT_ROOT', project.rootDir.absolutePath
+
+        // Capture output
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = new ByteArrayOutputStream()
+    }
+
+    doLast {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+
+        // Log output
+        logger.lifecycle(standardOutput.toString())
+        if (errorOutput.toString().trim().length() > 0) {
+            logger.error(errorOutput.toString())
+        }
+
+        // Check if generation was successful
+        def outputDir = project.file(config.outputDirectory.get())
+        if (!outputDir.exists() || outputDir.listFiles().length == 0) {
+            throw new IllegalStateException(
+                "API client generation failed. Check that OpenAPI Generator CLI is installed: " +
+                "npm install -g @openapitools/openapi-generator-cli"
+            )
+        }
+
+        logger.lifecycle("")
+        logger.lifecycle("API client generation completed successfully!")
+        logger.lifecycle("Generated clients location: ${outputDir.absolutePath}")
+        logger.lifecycle("")
+        logger.lifecycle("To use the generated clients, add dependencies to your build.gradle:")
+
+        config.apiDefinitionFiles.get().each { filePath ->
+            def fileName = new File(filePath).name
+            def serviceName = fileName.replaceAll(/-(api)?\.(yaml|yml|json)$/, '')
+            logger.lifecycle("  implementation '${config.groupId.get()}:${serviceName}-client:1.0.0'")
+        }
+    }
+
+    // Configure inputs for up-to-date checks and caching
+    inputs.files(project.provider {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+        config.apiDefinitionFiles.get().collect { project.file(it) }
+    })
+    inputs.property('groupId', project.provider {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+        config.groupId.get()
+    })
+    inputs.property('additionalProperties', project.provider {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+        config.additionalProperties.get()
+    })
+
+    // Configure outputs for up-to-date checks and caching
+    outputs.dir(project.provider {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+        project.file(config.outputDirectory.get())
+    })
+    outputs.cacheIf { true }
 }
