@@ -1,6 +1,6 @@
 plugins {
-    id 'xq-test' version '2.1.1'
-    id 'xq-dev' version '2.1.1'
+    id 'xq-test' version '2.2.0'
+    id 'xq-dev' version '2.2.0'
     id 'org.springframework.boot' version "3.3.0"
 }
 
@@ -23,7 +23,7 @@ repositories {
 }
 
 // Configure SIT test with TestNG
-sitTestConfig {
+e2eTestConfig {
     // Using XML suite file is recommended for proper TestNG lifecycle management
     suiteXmlFile = 'sit/test/resources/testng-suite.xml'
     // Alternatively, you can use programmatic group filtering (but @BeforeClass may not execute):
@@ -33,14 +33,21 @@ sitTestConfig {
     verbose = true
 }
 
+// Configure API Client Generation
+apiClientGeneration {
+    apiDefinitionFiles = ['user-api.yaml']
+    outputDirectory = 'generated-clients'
+    groupId = 'com.example.client'
+}
+
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
     implementation 'ch.qos.logback:logback-classic:1.2.11'
 
     // SIT Main dependencies
-    sitMainImplementation 'org.slf4j:slf4j-api:1.7.36'
+    e2eMainImplementation 'org.slf4j:slf4j-api:1.7.36'
 
     // Additional SIT test dependencies
-    sitTestImplementation 'io.rest-assured:rest-assured:5.3.0'
-    sitTestImplementation 'org.assertj:assertj-core:3.24.2'
+    e2eTestImplementation 'io.rest-assured:rest-assured:5.3.0'
+    e2eTestImplementation 'org.assertj:assertj-core:3.24.2'
 }

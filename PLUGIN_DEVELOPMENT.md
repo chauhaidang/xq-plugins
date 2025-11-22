@@ -113,6 +113,49 @@ dependencies {
 - Run E2E tests explicitly with `./gradlew e2eTest`
 - TestNG lifecycle methods (@BeforeClass, @AfterClass) work best with XML suite files
 
+### API Client Generation
+
+**NEW in v2.2.0**: The xq-test plugin provides automatic API client generation from OpenAPI/Swagger definition files.
+
+**Prerequisites:**
+```bash
+npm install -g @openapitools/openapi-generator-cli
+```
+
+**Configuration:**
+```groovy
+apiClientGeneration {
+    // Required: API definition files to generate clients from
+    apiDefinitionFiles = ['src/main/resources/api/user-api.yaml']
+
+    // Optional configuration
+    outputDirectory = 'generated-clients'  // Default: 'generated-clients'
+    groupId = 'com.mycompany.client'       // Default: 'com.xqfitness.client'
+    skipPublish = false                     // Default: false
+    cleanOutput = true                      // Default: true
+    additionalProperties = 'java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true'
+}
+```
+
+**Task:**
+- `generateApiClient` - Generates Java clients and publishes to Maven Local
+
+**Generated Artifacts:**
+- Maven artifact: `{groupId}:{serviceName}-client:1.0.0`
+- Service name is derived from the API file name (e.g., `user-api.yaml` becomes `user-client`)
+- Clients use RestTemplate and are compatible with Spring Boot 3.x (Jakarta EE)
+
+**Example Usage:**
+```bash
+# Generate clients
+./gradlew generateApiClient
+
+# Use in dependencies
+dependencies {
+    implementation 'com.mycompany.client:user-client:1.0.0'
+}
+```
+
 ## Test Configuration
 
 Both plugins support three test configuration types:

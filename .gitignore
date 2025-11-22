@@ -5,3 +5,6 @@
 build
 
 .idea
+generated-clients
+test-consumer/openapitools.json
+test-consumer/user-api.yaml

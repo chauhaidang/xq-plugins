@@ -7,9 +7,9 @@ A Gradle-based project for building and managing plugins.
 ## Plugins & platform version
 | Name            | Version | Last change                                          |
 |-----------------|---------|------------------------------------------------------|
-| plugin          | 2.1.2   | Rename 'sit' to 'e2e' sourceSet                      |
-| plugin->xq-dev  | 2.0.0   | Change default jar file name                         |
-| plugin->xq-test | 2.1.2   | Rename 'sit' to 'e2e' sourceSet                      |
+| plugin          | 2.1.3   | Rename 'sit' to 'e2e' sourceSet                      |
+| plugin->xq-dev  | 2.1.3   | No changes (synced version)                          |
+| plugin->xq-test | 2.1.3   | Rename 'sit' to 'e2e' sourceSet                      |
 
 ## Project Structure
 
@@ -26,6 +26,12 @@ A Gradle-based project for building and managing plugins.
   - Parallel execution support
   - Custom test listeners
   - Excluded from JaCoCo coverage reports
+- **NEW in v2.2.0**: API Client Generation from OpenAPI/Swagger definitions
+  - Automatic Java client generation using OpenAPI Generator
+  - Support for multiple API definition files
+  - Configurable output directory and Maven coordinates
+  - Automatic publishing to Maven Local repository
+  - Jakarta EE and Java 17 support
 - Customizable build and test tasks.
 - Predefined JAR naming for the plugin.
 
@@ -63,7 +69,7 @@ Apply the plugin in your `build.gradle`:
 
 ```groovy
 plugins {
-    id 'xq-test' version '2.1.2'
+    id 'xq-test' version '2.1.3'
 }
 ```
 
@@ -146,6 +152,75 @@ Create `e2e/test/resources/testng-suite.xml`:
 - `compileE2eMainJava` - Compile E2E utility classes
 - `compileE2eTestJava` - Compile E2E test classes
 - `e2eTest` - Execute E2E tests using TestNG
+
+### API Client Generation
+
+The xq-test plugin includes a powerful API client generation task that creates Java clients from OpenAPI/Swagger definition files.
+
+#### Prerequisites
+
+Install OpenAPI Generator CLI globally:
+
+```bash
+npm install -g @openapitools/openapi-generator-cli
+```
+
+#### Configuration
+
+In your `build.gradle`:
+
+```groovy
+apiClientGeneration {
+    // Required: List of API definition files (YAML or JSON)
+    apiDefinitionFiles = [
+        'src/main/resources/api/user-api.yaml',
+        'src/main/resources/api/order-api.yaml'
+    ]
+
+    // Optional: Output directory (defaults to 'generated-clients')
+    outputDirectory = 'generated-clients'
+
+    // Optional: Maven group ID (defaults to 'com.xqfitness.client')
+    groupId = 'com.mycompany.client'
+
+    // Optional: Skip publishing to Maven Local (defaults to false)
+    skipPublish = false
+}
+```
+
+#### Generate Clients
+
+```bash
+# Generate API clients from configured definition files
+./gradlew generateApiClient
+
+# The task will:
+# 1. Validate all API definition files exist
+# 2. Generate Java clients using OpenAPI Generator
+# 3. Publish generated clients to Maven Local repository
+# 4. Display usage instructions
+```
+
+#### Using Generated Clients
+
+After generation, add the clients as dependencies:
+
+```groovy
+dependencies {
+    implementation 'com.mycompany.client:user-client:1.0.0'
+    implementation 'com.mycompany.client:order-client:1.0.0'
+}
+```
+
+#### Generated Client Features
+
+The generated clients include:
+- **RestTemplate** based HTTP client
+- **Jakarta EE** annotations (Spring Boot 3.x compatible)
+- **Java 17** features support
+- Type-safe API and model classes
+- Request/response models with validation
+- Complete JavaDoc documentation
 
 ## Publishing
 
