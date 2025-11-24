@@ -44,7 +44,9 @@ check_openapi_generator() {
         log_error "OpenAPI Generator CLI is not installed!"
         log_info "Please install it globally using npm:"
         log_info "  npm install -g @openapitools/openapi-generator-cli"
-        exit 1
+        log_info "Installing OpenAPI Generator CLI..."
+        npm install -g @openapitools/openapi-generator-cli
+        log_success "OpenAPI Generator CLI installed successfully!"
     fi
 
     local version=$(openapi-generator-cli version 2>&1 | head -n 1 || echo "unknown")
