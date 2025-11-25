@@ -94,17 +94,8 @@ publish_client() {
 
     cd "$client_dir"
 
-    # Check if gradlew exists, if not use gradle command
-    if [ -f "./gradlew" ]; then
-        chmod +x ./gradlew
-        ./gradlew clean build publishToMavenLocal -x test
-    elif [ -f "pom.xml" ]; then
-        # For Maven-based generation
-        mvn clean install -DskipTests
-    else
-        log_error "No build tool found in $client_dir"
-        return 1
-    fi
+    chmod +x ./gradlew
+    ./gradlew clean build publishToMavenLocal -x test
 
     log_success "$service_name client published to Maven local repository"
 }
