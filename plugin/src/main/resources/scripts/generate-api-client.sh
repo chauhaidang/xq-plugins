@@ -93,6 +93,61 @@ generate_client() {
         --additional-properties=java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true
 
     log_success "Client generated for $service_name"
+    
+    # Fix Java version compatibility issue in generated build.gradle
+    fix_build_gradle "$output_dir"
+}
+
+# Fix generated build.gradle to handle Java version compatibility
+fix_build_gradle() {
+    local client_dir=$1
+    local build_gradle="$client_dir/build.gradle"
+    
+    if [ ! -f "$build_gradle" ]; then
+        log_warning "build.gradle not found in $client_dir, skipping fix"
+        return
+    fi
+    
+    log_info "Fixing Java version compatibility in build.gradle..."
+    
+    # Check if build.gradle already has java toolchain configuration
+    if grep -q "java.toolchain\|JavaLanguageVersion" "$build_gradle"; then
+        log_info "Java toolchain already configured in build.gradle"
+        return
+    fi
+    
+    # Add Java toolchain configuration after "apply plugin: 'maven-publish'"
+    # This ensures Gradle uses a compatible Java version
+    if grep -q "apply plugin: 'java'" "$build_gradle"; then
+        log_info "Adding Java toolchain configuration to build.gradle"
+        
+        # Create a Python script or use a more reliable method
+        # For now, let's use a simple approach: insert after maven-publish line
+        local temp_file=$(mktemp)
+        local inserted=false
+        
+        while IFS= read -r line; do
+            echo "$line" >> "$temp_file"
+            # Insert toolchain config after "apply plugin: 'maven-publish'"
+            if [[ "$line" == *"apply plugin: 'maven-publish'"* ]] && [ "$inserted" = false ]; then
+                echo "" >> "$temp_file"
+                echo "    java {" >> "$temp_file"
+                echo "        toolchain {" >> "$temp_file"
+                echo "            languageVersion = JavaLanguageVersion.of(17)" >> "$temp_file"
+                echo "        }" >> "$temp_file"
+                echo "    }" >> "$temp_file"
+                inserted=true
+            fi
+        done < "$build_gradle"
+        
+        if [ "$inserted" = true ]; then
+            mv "$temp_file" "$build_gradle"
+            log_success "build.gradle updated with Java toolchain configuration"
+        else
+            rm "$temp_file"
+            log_warning "Could not find insertion point for Java toolchain configuration"
+        fi
+    fi
 }
 
 # Publish client to Maven local repository
@@ -118,6 +173,21 @@ publish_client() {
     fi
 
     chmod +x ./gradlew
+
+    # Remove build directory to ensure clean rebuild with correct Java version
+    # This fixes "Unsupported class file major version" errors
+    if [ -d "build" ]; then
+        log_info "Removing build directory to ensure clean rebuild..."
+        rm -rf build
+    fi
+
+    # Set JVM args to suppress native access warnings (Java 17+)
+    # Preserve existing GRADLE_OPTS if set
+    if [ -z "$GRADLE_OPTS" ]; then
+        export GRADLE_OPTS="--enable-native-access=ALL-UNNAMED"
+    else
+        export GRADLE_OPTS="${GRADLE_OPTS} --enable-native-access=ALL-UNNAMED"
+    fi
 
     log_info "Running: ./gradlew clean build publishToMavenLocal -x test"
     if ./gradlew clean build publishToMavenLocal -x test; then
