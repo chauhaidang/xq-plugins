@@ -14,6 +14,16 @@ if [ -z "$GENERATED_CLIENTS_DIR" ]; then
     GENERATED_CLIENTS_DIR="$PROJECT_ROOT/generated-clients"
 fi
 
+# Check if publishing should be skipped (default: false)
+if [ -z "$SKIP_PUBLISH" ]; then
+    SKIP_PUBLISH="false"
+fi
+
+# Use GROUP_ID from environment if set, otherwise use default
+if [ -z "$GROUP_ID" ]; then
+    GROUP_ID="com.xqfitness.client"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -75,11 +85,11 @@ generate_client() {
         -g java \
         -o "$output_dir" \
         --library resttemplate \
-        --group-id com.xqfitness.client \
+        --group-id "$GROUP_ID" \
         --artifact-id "${service_name}-client" \
-        --api-package com.xqfitness.client.${service_name}.api \
-        --model-package com.xqfitness.client.${service_name}.model \
-        --invoker-package com.xqfitness.client.${service_name}.invoker \
+        --api-package ${GROUP_ID}.${service_name}.api \
+        --model-package ${GROUP_ID}.${service_name}.model \
+        --invoker-package ${GROUP_ID}.${service_name}.invoker \
         --additional-properties=java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true
 
     log_success "Client generated for $service_name"
@@ -92,12 +102,31 @@ publish_client() {
 
     log_info "Publishing $service_name client to Maven local repository..."
 
-    cd "$client_dir"
+    if [ ! -d "$client_dir" ]; then
+        log_error "Client directory does not exist: $client_dir"
+        return 1
+    fi
+
+    cd "$client_dir" || {
+        log_error "Failed to change directory to $client_dir"
+        return 1
+    }
+
+    if [ ! -f "./gradlew" ]; then
+        log_error "Gradle wrapper not found in $client_dir"
+        return 1
+    fi
 
     chmod +x ./gradlew
-    ./gradlew clean build publishToMavenLocal -x test
 
-    log_success "$service_name client published to Maven local repository"
+    log_info "Running: ./gradlew clean build publishToMavenLocal -x test"
+    if ./gradlew clean build publishToMavenLocal -x test; then
+        log_success "$service_name client published to Maven local repository"
+        return 0
+    else
+        log_error "Failed to publish $service_name client to Maven local repository"
+        return 1
+    fi
 }
 
 # Main execution
@@ -155,8 +184,16 @@ main() {
         # Generate client
         generate_client "$api_file"
 
-        # Publish to Maven local
-        publish_client "$client_dir"
+        # Publish to Maven local (unless skipped)
+        if [ "$SKIP_PUBLISH" != "true" ]; then
+            if ! publish_client "$client_dir"; then
+                log_error "Failed to publish $service_name client. Continuing with other clients..."
+                log_warning "Error occurred while publishing client for $service_name. See above logs for details. Continuing with other clients."
+                # Continue processing other clients even if one fails
+            fi
+        else
+            log_info "Skipping publishing for $service_name (SKIP_PUBLISH=true)"
+        fi
     done
 
     log_success "All clients generated and published successfully!"
@@ -165,7 +202,7 @@ main() {
     log_info "To use the clients in your project, add to build.gradle:"
     for api_file in "${api_files[@]}"; do
         local service_name=$(basename "$api_file" | sed 's/-api\.yaml$//' | sed 's/-api\.yml$//')
-        log_info "  implementation 'com.xqfitness.client:${service_name}-client:1.0.0'"
+        log_info "  implementation '${GROUP_ID}:${service_name}-client:1.0.0'"
     done
 }
 

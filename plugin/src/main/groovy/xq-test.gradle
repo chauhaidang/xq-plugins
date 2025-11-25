@@ -274,6 +274,8 @@ tasks.register('generateApiClient', Exec) {
         // Set environment variables to override script defaults
         environment 'GENERATED_CLIENTS_DIR', outputDir
         environment 'PROJECT_ROOT', project.rootDir.absolutePath
+        environment 'SKIP_PUBLISH', config.skipPublish.get().toString()
+        environment 'GROUP_ID', config.groupId.get()
 
         // Capture output
         standardOutput = new ByteArrayOutputStream()
