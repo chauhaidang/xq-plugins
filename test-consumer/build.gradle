@@ -33,6 +33,26 @@ e2eTestConfig {
     verbose = true
 }
 
+// Configure source sets to use 'sit' directory instead of 'e2e'
+sourceSets {
+    e2eMain {
+        java {
+            srcDirs = ['sit/main/java']
+        }
+        resources {
+            srcDirs = ['sit/main/resources']
+        }
+    }
+    e2eTest {
+        java {
+            srcDirs = ['sit/test/java']
+        }
+        resources {
+            srcDirs = ['sit/test/resources']
+        }
+    }
+}
+
 // Configure API Client Generation
 apiClientGeneration {
     apiDefinitionFiles = ['user-api.yaml']
@@ -44,10 +64,27 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
     implementation 'ch.qos.logback:logback-classic:1.2.11'
 
+    // Generated API Client (published to Maven Local)
+    implementation 'com.xqfitness.client:user-client:1.0.0'
+    
+    // Spring Web for RestTemplate (required by generated client)
+    implementation 'org.springframework:spring-web:6.1.0'
+    
+    // Jackson for JSON processing (required by generated client)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2'
+
     // SIT Main dependencies
     e2eMainImplementation 'org.slf4j:slf4j-api:1.7.36'
+    e2eMainImplementation 'com.xqfitness.client:user-client:1.0.0'
+    e2eMainImplementation 'org.springframework:spring-web:6.1.0'
+    e2eMainImplementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    e2eMainImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2'
 
     // Additional SIT test dependencies
     e2eTestImplementation 'io.rest-assured:rest-assured:5.3.0'
     e2eTestImplementation 'org.assertj:assertj-core:3.24.2'
+    e2eTestImplementation 'com.xqfitness.client:user-client:1.0.0'
+    e2eTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    e2eTestImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2'
 }

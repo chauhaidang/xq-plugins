@@ -9,6 +9,7 @@
         </groups>
         <classes>
             <class name="com.example.sit.SimpleIntegrationTest"/>
+            <class name="com.example.sit.UserApiClientTest"/>
         </classes>
     </test>
 </suite>

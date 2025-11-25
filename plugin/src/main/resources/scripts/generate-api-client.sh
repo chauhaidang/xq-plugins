@@ -48,6 +48,70 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Find Java 17 installation
+find_java17() {
+    # Check if JAVA_HOME is already set to Java 17
+    if [ -n "$JAVA_HOME" ]; then
+        if [ -f "$JAVA_HOME/bin/java" ]; then
+            local java_version=$("$JAVA_HOME/bin/java" -version 2>&1 | head -n 1 | grep -oE 'version "1[7-9]|version "2[0-5]' | grep -oE '1[7-9]|2[0-5]' || echo "")
+            if [ "$java_version" = "17" ]; then
+                log_info "Using existing JAVA_HOME (Java 17): $JAVA_HOME"
+                echo "$JAVA_HOME"
+                return 0
+            fi
+        fi
+    fi
+    
+    # Try to find Java 17 using /usr/libexec/java_home (macOS)
+    if command -v /usr/libexec/java_home &> /dev/null; then
+        local java17_home=$(/usr/libexec/java_home -v 17 2>/dev/null)
+        if [ -n "$java17_home" ] && [ -d "$java17_home" ]; then
+            log_info "Found Java 17 via java_home: $java17_home"
+            echo "$java17_home"
+            return 0
+        fi
+    fi
+    
+    # Check common Java installation locations
+    local java17_paths=(
+        "/usr/lib/jvm/java-17"
+        "/usr/lib/jvm/java-17-openjdk"
+        "/usr/lib/jvm/java-17-openjdk-amd64"
+        "/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home"
+        "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"
+        "/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
+    )
+    
+    for path in "${java17_paths[@]}"; do
+        if [ -d "$path" ] && [ -f "$path/bin/java" ]; then
+            local java_version=$("$path/bin/java" -version 2>&1 | head -n 1 | grep -oE 'version "1[7-9]|version "2[0-5]' | grep -oE '1[7-9]|2[0-5]' || echo "")
+            if [ "$java_version" = "17" ]; then
+                log_info "Found Java 17: $path"
+                echo "$path"
+                return 0
+            fi
+        fi
+    done
+    
+    # Check SDKMAN installations
+    if [ -d "$HOME/.sdkman/candidates/java" ]; then
+        for java_dir in "$HOME/.sdkman/candidates/java"/17*; do
+            if [ -d "$java_dir" ] && [ -f "$java_dir/bin/java" ]; then
+                local java_version=$("$java_dir/bin/java" -version 2>&1 | head -n 1 | grep -oE 'version "1[7-9]|version "2[0-5]' | grep -oE '1[7-9]|2[0-5]' || echo "")
+                if [ "$java_version" = "17" ]; then
+                    log_info "Found Java 17 via SDKMAN: $java_dir"
+                    echo "$java_dir"
+                    return 0
+                fi
+            fi
+        done
+    fi
+    
+    log_warning "Java 17 not found. OpenAPI Generator will use system Java."
+    echo ""
+    return 1
+}
+
 # Check if OpenAPI Generator is installed
 check_openapi_generator() {
     if ! command -v openapi-generator-cli &> /dev/null; then
@@ -79,7 +143,19 @@ generate_client() {
 
     mkdir -p "$output_dir"
 
+    # Find and use Java 17 for OpenAPI Generator
+    local java17_home=$(find_java17)
+    local original_java_home="$JAVA_HOME"
+    if [ -n "$java17_home" ] && [ -d "$java17_home" ]; then
+        export JAVA_HOME="$java17_home"
+        export PATH="$JAVA_HOME/bin:$PATH"
+        log_info "Using Java 17 for OpenAPI Generator: $JAVA_HOME"
+    else
+        log_warning "Java 17 not found. OpenAPI Generator will use system Java."
+    fi
+
     # Generate Java client using OpenAPI Generator
+    # The java17=true property ensures Java 17 compatible code generation
     openapi-generator-cli generate \
         -i "$api_file" \
         -g java \
@@ -91,6 +167,11 @@ generate_client() {
         --model-package ${GROUP_ID}.${service_name}.model \
         --invoker-package ${GROUP_ID}.${service_name}.invoker \
         --additional-properties=java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true
+
+    # Restore original JAVA_HOME if it was set
+    if [ -n "$original_java_home" ]; then
+        export JAVA_HOME="$original_java_home"
+    fi
 
     log_success "Client generated for $service_name"
     
