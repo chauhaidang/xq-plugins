@@ -215,7 +215,7 @@ dependencies {
 #### Generated Client Features
 
 The generated clients include:
-- **RestTemplate** based HTTP client
+- **WebClient** based HTTP client (Spring 5+ reactive, non-blocking)
 - **Jakarta EE** annotations (Spring Boot 3.x compatible)
 - **Java 17** features support
 - Type-safe API and model classes

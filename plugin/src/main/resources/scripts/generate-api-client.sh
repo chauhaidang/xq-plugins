@@ -156,11 +156,12 @@ generate_client() {
 
     # Generate Java client using OpenAPI Generator
     # The java17=true property ensures Java 17 compatible code generation
+    # Using webclient library for modern Spring 5+ reactive support
     openapi-generator-cli generate \
         -i "$api_file" \
         -g java \
         -o "$output_dir" \
-        --library resttemplate \
+        --library webclient \
         --group-id "$GROUP_ID" \
         --artifact-id "${service_name}-client" \
         --api-package ${GROUP_ID}.${service_name}.api \

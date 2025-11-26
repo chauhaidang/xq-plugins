@@ -143,7 +143,7 @@ apiClientGeneration {
 **Generated Artifacts:**
 - Maven artifact: `{groupId}:{serviceName}-client:1.0.0`
 - Service name is derived from the API file name (e.g., `user-api.yaml` becomes `user-client`)
-- Clients use RestTemplate and are compatible with Spring Boot 3.x (Jakarta EE)
+- Clients use WebClient and are compatible with Spring Boot 3.x (Jakarta EE)
 
 **Example Usage:**
 ```bash
