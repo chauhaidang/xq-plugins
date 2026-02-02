@@ -9,3 +9,4 @@ generated-clients
 test-consumer/openapitools.json
 test-consumer/user-api.yaml
 .DS_Store
+bin

@@ -276,6 +276,8 @@ tasks.register('generateApiClient', Exec) {
         environment 'PROJECT_ROOT', project.rootDir.absolutePath
         environment 'SKIP_PUBLISH', config.skipPublish.get().toString()
         environment 'GROUP_ID', config.groupId.get()
+        environment 'LIBRARY', config.library.get()
+        environment 'ADDITIONAL_PROPERTIES', config.additionalProperties.get()
 
         // Capture output
         standardOutput = new ByteArrayOutputStream()
@@ -325,6 +327,10 @@ tasks.register('generateApiClient', Exec) {
     inputs.property('additionalProperties', project.provider {
         def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
         config.additionalProperties.get()
+    })
+    inputs.property('library', project.provider {
+        def config = project.extensions.getByName('apiClientGeneration') as ApiClientGenerationExtension
+        config.library.get()
     })
 
     // Configure outputs for up-to-date checks and caching

@@ -24,6 +24,16 @@ if [ -z "$GROUP_ID" ]; then
     GROUP_ID="com.xqfitness.client"
 fi
 
+# Library: webclient (default) or rest-assured
+if [ -z "$LIBRARY" ]; then
+    LIBRARY="webclient"
+fi
+
+# Additional OpenAPI Generator properties (passed through from plugin)
+if [ -z "$ADDITIONAL_PROPERTIES" ]; then
+    ADDITIONAL_PROPERTIES="java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -130,10 +140,12 @@ check_openapi_generator() {
 # Generate client for a single API definition
 generate_client() {
     local api_file=$1
-    local service_name=$(basename "$api_file" | sed 's/-api\.yaml$//' | sed 's/-api\.yml$//')
+    local service_name=$(basename "$api_file" | sed 's/-api\.yaml$//' | sed 's/-api\.yml$//' | sed 's/\.yaml$//' | sed 's/\.yml$//' | sed 's/\.json$//')
+    # Java package names cannot contain hyphens; use underscores (e.g. read-service -> read_service)
+    local service_name_safe=$(echo "$service_name" | tr '-' '_')
     local output_dir="$GENERATED_CLIENTS_DIR/$service_name"
 
-    log_info "Generating client for $service_name from $api_file"
+    log_info "Generating client for $service_name from $api_file (library: $LIBRARY)"
 
     # Clean previous generation
     if [ -d "$output_dir" ]; then
@@ -155,19 +167,19 @@ generate_client() {
     fi
 
     # Generate Java client using OpenAPI Generator
-    # The java17=true property ensures Java 17 compatible code generation
-    # Using webclient library for modern Spring 5+ reactive support
+    # LIBRARY: webclient (Spring WebFlux) or rest-assured
+    # Use service_name_safe for packages (Java packages cannot contain hyphens)
     openapi-generator-cli generate \
         -i "$api_file" \
         -g java \
         -o "$output_dir" \
-        --library webclient \
+        --library "$LIBRARY" \
         --group-id "$GROUP_ID" \
         --artifact-id "${service_name}-client" \
-        --api-package ${GROUP_ID}.${service_name}.api \
-        --model-package ${GROUP_ID}.${service_name}.model \
-        --invoker-package ${GROUP_ID}.${service_name}.invoker \
-        --additional-properties=java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true
+        --api-package "${GROUP_ID}.${service_name_safe}.api" \
+        --model-package "${GROUP_ID}.${service_name_safe}.model" \
+        --invoker-package "${GROUP_ID}.${service_name_safe}.invoker" \
+        --additional-properties "$ADDITIONAL_PROPERTIES"
 
     # Restore original JAVA_HOME if it was set
     if [ -n "$original_java_home" ]; then

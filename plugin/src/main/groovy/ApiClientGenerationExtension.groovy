@@ -75,6 +75,14 @@ abstract class ApiClientGenerationExtension {
      */
     abstract Property<String> getAdditionalProperties()
 
+    /**
+     * Java client library: 'webclient' (Spring WebFlux) or 'rest-assured'.
+     * <p>
+     * Defaults to 'webclient'. Use 'rest-assured' for component tests with Rest Assured.
+     * </p>
+     */
+    abstract Property<String> getLibrary()
+
     ApiClientGenerationExtension() {
         // Set defaults
         apiDefinitionFiles.convention([])
@@ -83,5 +91,6 @@ abstract class ApiClientGenerationExtension {
         skipPublish.convention(false)
         cleanOutput.convention(true)
         additionalProperties.convention('java17=true,dateLibrary=java8,hideGenerationTimestamp=true,useJakartaEe=true')
+        library.convention('webclient')
     }
 }

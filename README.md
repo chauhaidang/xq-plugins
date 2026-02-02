@@ -183,6 +183,9 @@ apiClientGeneration {
     // Optional: Maven group ID (defaults to 'com.xqfitness.client')
     groupId = 'com.mycompany.client'
 
+    // Optional: Java client library - 'webclient' (default) or 'rest-assured'
+    library = 'rest-assured'
+
     // Optional: Skip publishing to Maven Local (defaults to false)
     skipPublish = false
 }
@@ -215,7 +218,7 @@ dependencies {
 #### Generated Client Features
 
 The generated clients include:
-- **WebClient** based HTTP client (Spring 5+ reactive, non-blocking)
+- **Library**: `webclient` (Spring WebFlux, reactive) or `rest-assured` (for component/integration tests)
 - **Jakarta EE** annotations (Spring Boot 3.x compatible)
 - **Java 17** features support
 - Type-safe API and model classes
