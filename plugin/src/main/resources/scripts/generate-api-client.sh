@@ -190,6 +190,10 @@ generate_client() {
     
     # Fix Java version compatibility issue in generated build.gradle
     fix_build_gradle "$output_dir"
+    # Fix rest-assured client so it builds and publishes (jakarta.annotation-api 2.x for useJakartaEe=true)
+    if [ "$LIBRARY" = "rest-assured" ]; then
+        fix_rest_assured_build_gradle "$output_dir"
+    fi
 }
 
 # Fix generated build.gradle to handle Java version compatibility
@@ -241,6 +245,22 @@ fix_build_gradle() {
             rm "$temp_file"
             log_warning "Could not find insertion point for Java toolchain configuration"
         fi
+    fi
+}
+
+# Fix rest-assured generated build.gradle: use jakarta.annotation-api 2.x so code with useJakartaEe=true compiles
+fix_rest_assured_build_gradle() {
+    local client_dir=$1
+    local build_gradle="$client_dir/build.gradle"
+    if [ ! -f "$build_gradle" ]; then
+        return
+    fi
+    if grep -q 'jakarta_annotation_version' "$build_gradle"; then
+        log_info "Fixing jakarta.annotation-api version for Jakarta EE (rest-assured client)..."
+        local tmp_file=$(mktemp)
+        sed 's/jakarta_annotation_version = "1\.3\.5"/jakarta_annotation_version = "2.1.1"/' "$build_gradle" > "$tmp_file"
+        mv "$tmp_file" "$build_gradle"
+        log_success "build.gradle updated with jakarta.annotation-api 2.1.1"
     fi
 }
 
