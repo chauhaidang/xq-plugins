@@ -194,6 +194,8 @@ generate_client() {
     if [ "$LIBRARY" = "rest-assured" ]; then
         fix_rest_assured_build_gradle "$output_dir"
     fi
+    # Add jackson-databind-nullable so generated code using JsonNullable compiles (publish to Maven local)
+    fix_jackson_nullable_build_gradle "$output_dir"
 }
 
 # Fix generated build.gradle to handle Java version compatibility
@@ -262,6 +264,31 @@ fix_rest_assured_build_gradle() {
         mv "$tmp_file" "$build_gradle"
         log_success "build.gradle updated with jakarta.annotation-api 2.1.1"
     fi
+}
+
+# Add jackson-databind-nullable so generated code using JsonNullable compiles and can be published
+fix_jackson_nullable_build_gradle() {
+    local client_dir=$1
+    local build_gradle="$client_dir/build.gradle"
+    if [ ! -f "$build_gradle" ]; then
+        return
+    fi
+    if grep -q 'jackson-databind-nullable' "$build_gradle"; then
+        return
+    fi
+    log_info "Adding org.openapitools:jackson-databind-nullable for JsonNullable support..."
+    local tmp_file=$(mktemp)
+    # Insert implementation line before the first testImplementation in dependencies block
+    awk '
+        /^dependencies \{/ { in_deps=1 }
+        in_deps && /testImplementation/ && !inserted {
+            print "    implementation \"org.openapitools:jackson-databind-nullable:0.2.6\""
+            inserted=1
+        }
+        { print }
+    ' "$build_gradle" > "$tmp_file"
+    mv "$tmp_file" "$build_gradle"
+    log_success "build.gradle updated with jackson-databind-nullable"
 }
 
 # Publish client to Maven local repository
